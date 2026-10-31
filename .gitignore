@@ -1,0 +1,11 @@
+# secrets - never commit
+.env
+*.csv
+# python
+__pycache__/
+*.pyc
+.venv/
+*.db
+# node
+node_modules/
+dist/
