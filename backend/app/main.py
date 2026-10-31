@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.database import init_db
-from app.routers import auth, plans, products
+from app.routers import auth, discounts, plans, products, quotations, taxes
 from app.seed import seed_admin
 
 
@@ -29,6 +29,9 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(products.router)
 app.include_router(plans.router)
+app.include_router(taxes.router)
+app.include_router(discounts.router)
+app.include_router(quotations.router)
 
 
 @app.get("/health")

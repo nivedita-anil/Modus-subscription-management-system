@@ -5,6 +5,9 @@ import RequireRole from "./components/RequireRole.jsx";
 import AdminLayout from "./components/layouts/AdminLayout.jsx";
 import Products from "./pages/admin/Products.jsx";
 import Plans from "./pages/admin/Plans.jsx";
+import QuotationTemplates from "./pages/admin/QuotationTemplates.jsx";
+import Discounts from "./pages/admin/Discounts.jsx";
+import Taxes from "./pages/admin/Taxes.jsx";
 import { getToken, getUser, homePathFor, logout } from "./lib/auth";
 
 // "/" sends each signed-in user to their own area.
@@ -52,6 +55,9 @@ export default function App() {
         <Route index element={<Navigate to="products" replace />} />
         <Route path="products" element={<Products />} />
         <Route path="plans" element={<Plans />} />
+        <Route path="quotation-templates" element={<QuotationTemplates />} />
+        <Route path="discounts" element={<Discounts />} />
+        <Route path="taxes" element={<Taxes />} />
         <Route path="*" element={<Navigate to="products" replace />} />
       </Route>
 

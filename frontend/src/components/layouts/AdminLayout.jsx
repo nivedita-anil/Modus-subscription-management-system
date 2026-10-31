@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard, Package, Layers, Percent, Receipt, Users, LogOut, Repeat,
+  LayoutDashboard, Package, Layers, Percent, Receipt, Users, LogOut, Repeat, FileText,
 } from "lucide-react";
 import { getUser, logout } from "../../lib/auth";
 
@@ -9,8 +9,9 @@ const nav = [
   { to: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard, soon: true },
   { to: "/admin/products", label: "Products", icon: Package },
   { to: "/admin/plans", label: "Plans", icon: Layers },
-  { to: "/admin/discounts", label: "Discounts", icon: Percent, soon: true },
-  { to: "/admin/taxes", label: "Tax rules", icon: Receipt, soon: true },
+  { to: "/admin/discounts", label: "Discounts", icon: Percent },
+  { to: "/admin/taxes", label: "Tax rules", icon: Receipt },
+  { to: "/admin/quotation-templates", label: "Quotation templates", icon: FileText },
   { to: "/admin/staff", label: "Staff", icon: Users, soon: true },
 ];
 
