@@ -1,12 +1,13 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard, Package, Layers, Percent, Receipt, Users, LogOut, Repeat, FileText,
+  LayoutDashboard, Package, Layers, Percent, Receipt, Users, LogOut, Repeat, FileText, ClipboardList,
 } from "lucide-react";
 import { getUser, logout } from "../../lib/auth";
 
 // `soon: true` items are placeholders until we build them.
 const nav = [
   { to: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard, soon: true },
+  { to: "/admin/subscriptions", label: "Subscriptions", icon: ClipboardList },
   { to: "/admin/products", label: "Products", icon: Package },
   { to: "/admin/plans", label: "Plans", icon: Layers },
   { to: "/admin/discounts", label: "Discounts", icon: Percent },

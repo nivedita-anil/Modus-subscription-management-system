@@ -9,6 +9,10 @@ import QuotationTemplates from "./pages/admin/QuotationTemplates.jsx";
 import Discounts from "./pages/admin/Discounts.jsx";
 import Taxes from "./pages/admin/Taxes.jsx";
 import { getToken, getUser, homePathFor, logout } from "./lib/auth";
+import StaffLayout from "./components/layouts/StaffLayout.jsx";
+import Subscriptions from "./pages/staff/Subscriptions.jsx";
+import SubscriptionForm from "./pages/staff/SubscriptionForm.jsx";
+import SubscriptionDetail from "./pages/staff/SubscriptionDetail.jsx";
 
 // "/" sends each signed-in user to their own area.
 function Home() {
@@ -58,11 +62,22 @@ export default function App() {
         <Route path="quotation-templates" element={<QuotationTemplates />} />
         <Route path="discounts" element={<Discounts />} />
         <Route path="taxes" element={<Taxes />} />
+        <Route path="subscriptions" element={<Subscriptions />} />
+        <Route path="subscriptions/new" element={<SubscriptionForm />} />
+        <Route path="subscriptions/:id" element={<SubscriptionDetail />} />
+        <Route path="subscriptions/:id/edit" element={<SubscriptionForm />} />
         <Route path="*" element={<Navigate to="products" replace />} />
       </Route>
 
-      <Route path="/staff/*" element={
-        <RequireRole roles={["staff", "admin"]}><ComingSoon title="Staff area" /></RequireRole>} />
+      <Route path="/staff" element={<RequireRole roles={["staff", "admin"]}><StaffLayout /></RequireRole>}>
+        <Route index element={<Navigate to="subscriptions" replace />} />
+        <Route path="subscriptions" element={<Subscriptions />} />
+        <Route path="subscriptions/new" element={<SubscriptionForm />} />
+        <Route path="subscriptions/:id" element={<SubscriptionDetail />} />
+        <Route path="subscriptions/:id/edit" element={<SubscriptionForm />} />
+        <Route path="quotation-templates" element={<QuotationTemplates />} />
+        <Route path="*" element={<Navigate to="subscriptions" replace />} />
+      </Route>
       <Route path="/portal/*" element={
         <RequireRole roles={["customer"]}><ComingSoon title="Customer portal" /></RequireRole>} />
 

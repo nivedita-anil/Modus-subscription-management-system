@@ -4,3 +4,4 @@ from app.models.plan import Plan  # noqa: F401
 from app.models.tax import TaxRule  # noqa: F401
 from app.models.discount import Discount  # noqa: F401
 from app.models.quotation import QuotationTemplate, QuotationTemplateLine  # noqa: F401
+from app.models.subscription import Subscription, SubscriptionLine  # noqa: F401
