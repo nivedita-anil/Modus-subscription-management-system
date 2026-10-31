@@ -14,7 +14,7 @@ engine = create_async_engine(
 
 SessionLocal = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 
-
+#fastAPI
 class Base(DeclarativeBase):
     pass
 
