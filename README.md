@@ -1,28 +1,30 @@
 # Brightloop
 
-A subscription management system for businesses that sell recurring products and services. It covers the full billing lifecycle: quotations, subscriptions, invoices, payments, and overdue follow-up, with separate interfaces for customers, staff, and admins.
+A subscription management system for businesses that sell recurring products and services. It covers the billing lifecycle (quotations, subscriptions, invoices, payments, overdue follow-up) with separate interfaces for customers, staff, and admins.
 
-Built for a hackathon. The backend is FastAPI and the frontend is React.
+Built for a hackathon. FastAPI backend, React frontend.
 
 ## Status
 
-Work in progress. Here is what exists today and what doesn't.
+Work in progress. Features are built backend and frontend together, one at a time.
 
-| Area | State |
+| Feature | State |
 | --- | --- |
-| Backend foundation (config, database, health check) | Done |
-| `users` table with unique email and role column | Done |
-| Frontend scaffold (Vite, React, Tailwind) | Done |
-| Login and register pages (UI and validation) | Done |
-| Auth endpoints (register, login, roles) | Next |
-| Products, variants, plans | Planned |
-| Subscriptions and quotation templates | Planned |
+| Backend foundation (config, async database, health check) | Done |
+| Auth: register, login, JWT access and refresh tokens, role guards | Done |
+| Seeded admin account | Done |
+| Frontend scaffold, login and register pages | Done |
+| Admin layout with role-protected routes | Done |
+| Products and variants | Done |
+| Plans (price, billing period, availability, lifecycle options) | Done |
+| Tax rules and discounts | Next |
+| Quotation templates and subscriptions | Planned |
 | Invoices, payments, overdue handling | Planned |
-| Tax rules, discounts, finance dashboard | Planned |
+| Customer portal | Planned |
+| Finance dashboard | Planned |
+| Password reset | Planned |
 
-The login and register forms render and validate, but submitting them will show an error until the auth endpoints are built.
-
-## Features (target scope)
+## Target scope
 
 **Customer portal**
 - Sign up, log in, reset password
@@ -43,30 +45,32 @@ The login and register forms render and validate, but submitting them will show 
 
 ## Tech stack
 
-- **Backend:** Python, FastAPI, SQLAlchemy, SQLite
-- **Frontend:** React, Vite, Tailwind CSS
+- **Backend:** Python, FastAPI, async SQLAlchemy, SQLite, Pydantic
+- **Frontend:** React, Vite, Tailwind CSS, lucide-react icons
 
 ## Project structure
 
 ```
 .
-├── backend/                 FastAPI app and SQLite database
+├── backend/
+│   └── app/
+│       ├── main.py          App setup, CORS, router registration
+│       ├── config.py        Settings
+│       ├── database.py      Engine, session, init_db
+│       ├── deps.py          Auth dependencies and role guards
+│       ├── seed.py          Creates the default admin on startup
+│       ├── models/          user, product, plan
+│       ├── schemas/         auth, product, plan
+│       └── routers/         auth, products, plans
 └── frontend/
-    ├── index.html
-    ├── package.json
-    ├── vite.config.js
-    ├── tailwind.config.js
-    ├── postcss.config.js
-    ├── .env.example
     └── src/
-        ├── main.jsx
-        ├── App.jsx
-        ├── index.css
-        ├── api/client.js            API client
-        ├── components/AuthShell.jsx  Shared layout for auth pages
-        └── pages/auth/
-            ├── Login.jsx
-            └── Register.jsx
+        ├── App.jsx          Routes
+        ├── api/client.js    API client
+        ├── lib/             auth.js, format.js
+        ├── components/      AuthShell, RequireRole, layouts/AdminLayout
+        └── pages/
+            ├── auth/        Login, Register
+            └── admin/       Products, Plans
 ```
 
 ## Getting started
@@ -80,8 +84,8 @@ The login and register forms render and validate, but submitting them will show 
 
 ```bash
 cd backend
-python3 -m venv venv
-source venv/bin/activate
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
@@ -89,9 +93,9 @@ uvicorn app.main:app --reload
 The API runs at `http://localhost:8000`.
 
 - Health check: `http://localhost:8000/health`
-- Interactive API docs (Swagger): `http://localhost:8000/docs`
+- Swagger docs: `http://localhost:8000/docs`
 
-The SQLite database (`brightloop.db`) is created in `backend/` on first run.
+On startup the app creates any missing tables in `brightloop.db` and seeds the admin account.
 
 ### Frontend
 
@@ -104,30 +108,57 @@ npm install
 npm run dev
 ```
 
-The app runs at `http://localhost:5173` and redirects to `/login`. Make sure the backend is running, otherwise the forms will report that they can't reach the server.
+The app runs at `http://localhost:5173` and redirects to `/login`. The backend must be running.
+
+### Default admin login
+
+```
+admin@brightloop.com
+Admin@12345
+```
+
+This account is for local development only. Change the password before deploying anywhere.
+
+## Roles and access
+
+| Role | Access |
+| --- | --- |
+| Admin | Everything, including creating and editing products and plans |
+| Staff | Read access to products and plans, plus the staff screens as they are built |
+| Customer | Customer portal only |
+
+Admin pages are wrapped in a role guard on the frontend, and every write endpoint checks the role on the backend.
 
 ## Password rules
 
-Registration enforces the following, and the same rules will be enforced server-side:
+Registration requires:
 
 - More than 8 characters
 - At least one uppercase letter
 - At least one lowercase letter
 - At least one special character
 
+## API overview
+
+| Prefix | Purpose |
+| --- | --- |
+| `/auth` | Register, login, token refresh |
+| `/products` | Product and variant management |
+| `/plans` | Plan management. List supports search, billing period, active flag, and `available_on` date filters |
+
+See `/docs` for the full list with request and response shapes.
+
 ## Roadmap
 
-1. Backend auth: register, login, role guards
-2. Wire the login and register pages to the API
-3. Products, variants, and plans
-4. Subscriptions and quotation templates
-5. Invoices and payments
-6. Overdue handling, tax rules, discounts
+1. Tax rules and discounts
+2. Quotation templates
+3. Subscriptions and the status lifecycle
+4. Invoices and payments
+5. Overdue handling
+6. Customer portal
 7. Finance dashboard
-
-Each step is built backend and frontend together so every feature can be clicked through.
 
 ## Notes
 
-- `brightloop.db` and `.env` should not be committed. Check `.gitignore` before pushing.
-- The Swagger page at `/docs` is a developer tool for testing endpoints. It is not the product interface.
+- `brightloop.db`, `.env`, and `node_modules` must not be committed. Check `git status` before every push.
+- The Swagger page is a developer tool. The product interface is the React app.
