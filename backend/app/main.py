@@ -11,7 +11,7 @@ from app.database import init_db
 async def lifespan(app: FastAPI):
     await init_db()
     yield
-
+# fast API
 
 app = FastAPI(title=settings.app_name, lifespan=lifespan)
 
