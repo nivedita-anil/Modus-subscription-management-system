@@ -17,6 +17,11 @@ class Settings(BaseSettings):
     refresh_token_expire_days: int = 7
     reset_token_expire_minutes: int = 15
 
+    # First admin account, created on startup if no admin exists.
+    # Override both in .env (and change the password!) for anything beyond local dev.
+    admin_email: str = "admin@brightloop.com"
+    admin_password: str = "Admin@12345"
+
     # Frontend
     frontend_url: str = "http://localhost:5173"
 

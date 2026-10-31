@@ -1,18 +1,29 @@
 import { Routes, Route, Navigate, Link } from "react-router-dom";
 import Login from "./pages/auth/Login.jsx";
 import Register from "./pages/auth/Register.jsx";
+import RequireRole from "./components/RequireRole.jsx";
+import AdminLayout from "./components/layouts/AdminLayout.jsx";
+import Products from "./pages/admin/Products.jsx";
+import Plans from "./pages/admin/Plans.jsx";
+import { getToken, getUser, homePathFor, logout } from "./lib/auth";
 
-// Temporary landing page after login. Replaced by role-based dashboards later.
+// "/" sends each signed-in user to their own area.
 function Home() {
-  const signedIn = !!localStorage.getItem("access_token");
-  if (!signedIn) return <Navigate to="/login" replace />;
+  const user = getUser();
+  if (!getToken() || !user) return <Navigate to="/login" replace />;
+  return <Navigate to={homePathFor(user.role)} replace />;
+}
+
+// Temporary pages for areas we haven't built yet.
+function ComingSoon({ title }) {
+  const user = getUser();
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-4">
-      <h1 className="text-2xl font-bold">You're signed in 🎉</h1>
-      <p className="text-slate-500">Dashboards arrive in the next steps.</p>
+    <div className="flex min-h-screen flex-col items-center justify-center gap-3 text-center">
+      <h1 className="text-2xl font-bold">{title}</h1>
+      <p className="text-slate-500">Signed in as {user?.email}. This area arrives in a later step.</p>
       <button
         className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white"
-        onClick={() => { localStorage.removeItem("access_token"); location.href = "/login"; }}
+        onClick={() => { logout(); location.href = "/login"; }}
       >
         Sign out
       </button>
@@ -36,6 +47,19 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<Placeholder text="Password reset page coming soon." />} />
+
+      <Route path="/admin" element={<RequireRole roles={["admin"]}><AdminLayout /></RequireRole>}>
+        <Route index element={<Navigate to="products" replace />} />
+        <Route path="products" element={<Products />} />
+        <Route path="plans" element={<Plans />} />
+        <Route path="*" element={<Navigate to="products" replace />} />
+      </Route>
+
+      <Route path="/staff/*" element={
+        <RequireRole roles={["staff", "admin"]}><ComingSoon title="Staff area" /></RequireRole>} />
+      <Route path="/portal/*" element={
+        <RequireRole roles={["customer"]}><ComingSoon title="Customer portal" /></RequireRole>} />
+
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

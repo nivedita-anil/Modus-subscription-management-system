@@ -20,6 +20,8 @@ export default function Login() {
     try {
       const data = await api("/auth/login", { method: "POST", body: form });
       localStorage.setItem("access_token", data.access_token);
+      localStorage.setItem("refresh_token", data.refresh_token);
+      localStorage.setItem("user", JSON.stringify(data.user));
       navigate("/");
     } catch (err) {
       setError(err.message);
