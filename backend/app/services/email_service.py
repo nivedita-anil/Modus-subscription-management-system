@@ -15,7 +15,7 @@ async def send_email(to: str, subject: str, html: str) -> bool:
             json={"from": settings.email_from, "to": [to], "subject": subject, "html": html},
         )
     return r.status_code < 300
-
+# email send ,now password reset
 
 async def send_password_reset(to: str, link: str) -> bool:
     html = (
