@@ -24,3 +24,10 @@
            disabled:cursor-not-allowed disabled:opacity-60;
   }
 }
+
+@media print {
+  .no-print { display: none !important; }
+  body { background: white !important; }
+  main { padding: 0 !important; }
+  .print-sheet { border: none !important; box-shadow: none !important; }
+}

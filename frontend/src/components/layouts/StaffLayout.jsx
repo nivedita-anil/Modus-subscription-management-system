@@ -2,13 +2,12 @@ import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { ClipboardList, FileText, Receipt, Wallet, AlertTriangle, LogOut, Repeat } from "lucide-react";
 import { getUser, logout } from "../../lib/auth";
 
-// `soon: true` items are placeholders until we build them.
 const nav = [
   { to: "/staff/subscriptions", label: "Subscriptions", icon: ClipboardList },
   { to: "/staff/quotation-templates", label: "Quotation templates", icon: FileText },
-  { to: "/staff/invoices", label: "Invoices", icon: Receipt, soon: true },
-  { to: "/staff/payments", label: "Payments", icon: Wallet, soon: true },
-  { to: "/staff/overdue", label: "Overdue", icon: AlertTriangle, soon: true },
+  { to: "/staff/invoices", label: "Invoices", icon: Receipt },
+  { to: "/staff/payments", label: "Payments", icon: Wallet },
+  { to: "/staff/overdue", label: "Overdue", icon: AlertTriangle },
 ];
 
 export default function StaffLayout() {

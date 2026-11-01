@@ -36,10 +36,10 @@ TEMPLATES = [
 
 # customer, plan, status, start offset, expiry offset, terms, lines
 SUBS = [
-    ("rahul@example.com", "Business Monthly", "active", -40, 325, "net_15", [
+    ("rahul@example.com", "Business Monthly", "active", -40, 324, "net_15", [
         ("Brightloop CRM", "Standard", 5, 1000, "GST 18%", "Launch 10%"),
         ("Priority Support", None, 1, 499, "GST 18%", None)]),
-    ("meera@example.com", "Business Yearly", "confirmed", -10, 355, "net_30", [
+    ("meera@example.com", "Business Yearly", "confirmed", -10, 354, "net_30", [
         ("Brightloop CRM", "Odoo", 10, 1560, "GST 18%", "Bulk 15%"),
         ("Analytics Add-on", None, 10, 299, "GST 18%", None)]),
     ("arjun@example.com", "Starter Monthly", "draft", 0, 364, "immediate", [

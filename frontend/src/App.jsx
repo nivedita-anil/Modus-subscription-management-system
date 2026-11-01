@@ -1,6 +1,8 @@
-import { Routes, Route, Navigate, Link } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/auth/Login.jsx";
 import Register from "./pages/auth/Register.jsx";
+import ForgotPassword from "./pages/auth/ForgotPassword.jsx";
+import ResetPassword from "./pages/auth/ResetPassword.jsx";
 import RequireRole from "./components/RequireRole.jsx";
 import AdminLayout from "./components/layouts/AdminLayout.jsx";
 import Products from "./pages/admin/Products.jsx";
@@ -8,11 +10,17 @@ import Plans from "./pages/admin/Plans.jsx";
 import QuotationTemplates from "./pages/admin/QuotationTemplates.jsx";
 import Discounts from "./pages/admin/Discounts.jsx";
 import Taxes from "./pages/admin/Taxes.jsx";
-import { getToken, getUser, homePathFor, logout } from "./lib/auth";
-import StaffLayout from "./components/layouts/StaffLayout.jsx";
-import Subscriptions from "./pages/staff/Subscriptions.jsx";
-import SubscriptionForm from "./pages/staff/SubscriptionForm.jsx";
-import SubscriptionDetail from "./pages/staff/SubscriptionDetail.jsx";
+import StaffUsers from "./pages/admin/StaffUsers.jsx";
+import PortalLayout from "./components/layouts/PortalLayout.jsx";
+import Dashboard from "./pages/shared/Dashboard.jsx";
+import Subscriptions from "./pages/shared/Subscriptions.jsx";
+import SubscriptionDetail from "./pages/shared/SubscriptionDetail.jsx";
+import SubscriptionForm from "./pages/shared/SubscriptionForm.jsx";
+import Invoices from "./pages/shared/Invoices.jsx";
+import InvoiceDetail from "./pages/shared/InvoiceDetail.jsx";
+import Payments from "./pages/shared/Payments.jsx";
+import MySubscriptions from "./pages/portal/MySubscriptions.jsx";
+import { getToken, getUser, homePathFor } from "./lib/auth";
 
 // "/" sends each signed-in user to their own area.
 function Home() {
@@ -21,31 +29,18 @@ function Home() {
   return <Navigate to={homePathFor(user.role)} replace />;
 }
 
-// Temporary pages for areas we haven't built yet.
-function ComingSoon({ title }) {
-  const user = getUser();
-  return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-3 text-center">
-      <h1 className="text-2xl font-bold">{title}</h1>
-      <p className="text-slate-500">Signed in as {user?.email}. This area arrives in a later step.</p>
-      <button
-        className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white"
-        onClick={() => { logout(); location.href = "/login"; }}
-      >
-        Sign out
-      </button>
-    </div>
-  );
-}
-
-function Placeholder({ text }) {
-  return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-3">
-      <p className="text-slate-600">{text}</p>
-      <Link to="/login" className="font-medium text-brand-600">Back to sign in</Link>
-    </div>
-  );
-}
+// Screens that admin and staff both use (rendered under /admin and under /staff).
+const sharedScreens = [
+  ["dashboard", <Dashboard />],
+  ["subscriptions", <Subscriptions />],
+  ["subscriptions/new", <SubscriptionForm />],
+  ["subscriptions/:id", <SubscriptionDetail />],
+  ["subscriptions/:id/edit", <SubscriptionForm />],
+  ["invoices", <Invoices />],
+  ["invoices/:id", <InvoiceDetail />],
+  ["payments", <Payments />],
+  ["quotation-templates", <QuotationTemplates />],
+];
 
 export default function App() {
   return (
@@ -53,33 +48,34 @@ export default function App() {
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      <Route path="/forgot-password" element={<Placeholder text="Password reset page coming soon." />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
 
       <Route path="/admin" element={<RequireRole roles={["admin"]}><AdminLayout /></RequireRole>}>
-        <Route index element={<Navigate to="products" replace />} />
+        <Route index element={<Navigate to="dashboard" replace />} />
+        {sharedScreens.map(([path, el]) => <Route key={path} path={path} element={el} />)}
         <Route path="products" element={<Products />} />
         <Route path="plans" element={<Plans />} />
-        <Route path="quotation-templates" element={<QuotationTemplates />} />
         <Route path="discounts" element={<Discounts />} />
         <Route path="taxes" element={<Taxes />} />
-        <Route path="subscriptions" element={<Subscriptions />} />
-        <Route path="subscriptions/new" element={<SubscriptionForm />} />
-        <Route path="subscriptions/:id" element={<SubscriptionDetail />} />
-        <Route path="subscriptions/:id/edit" element={<SubscriptionForm />} />
-        <Route path="*" element={<Navigate to="products" replace />} />
+        <Route path="staff-users" element={<StaffUsers />} />
+        <Route path="*" element={<Navigate to="dashboard" replace />} />
       </Route>
 
-      <Route path="/staff" element={<RequireRole roles={["staff", "admin"]}><StaffLayout /></RequireRole>}>
+      <Route path="/staff" element={<RequireRole roles={["staff"]}><AdminLayout /></RequireRole>}>
+        <Route index element={<Navigate to="dashboard" replace />} />
+        {sharedScreens.map(([path, el]) => <Route key={path} path={path} element={el} />)}
+        <Route path="*" element={<Navigate to="dashboard" replace />} />
+      </Route>
+
+      <Route path="/portal" element={<RequireRole roles={["customer"]}><PortalLayout /></RequireRole>}>
         <Route index element={<Navigate to="subscriptions" replace />} />
-        <Route path="subscriptions" element={<Subscriptions />} />
-        <Route path="subscriptions/new" element={<SubscriptionForm />} />
+        <Route path="subscriptions" element={<MySubscriptions />} />
         <Route path="subscriptions/:id" element={<SubscriptionDetail />} />
-        <Route path="subscriptions/:id/edit" element={<SubscriptionForm />} />
-        <Route path="quotation-templates" element={<QuotationTemplates />} />
+        <Route path="invoices" element={<Invoices />} />
+        <Route path="invoices/:id" element={<InvoiceDetail />} />
         <Route path="*" element={<Navigate to="subscriptions" replace />} />
       </Route>
-      <Route path="/portal/*" element={
-        <RequireRole roles={["customer"]}><ComingSoon title="Customer portal" /></RequireRole>} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

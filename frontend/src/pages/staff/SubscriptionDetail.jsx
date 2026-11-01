@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Check, Loader2, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, Check, Loader2, Pencil, Receipt, Trash2 } from "lucide-react";
 import { api } from "../../api/client";
 import { money } from "../../lib/format";
-import { STATUSES, PERIOD_UNIT, fmtDate, termsLabel, useBase } from "../../lib/subscriptions";
+import { STATUSES, PERIOD_UNIT, fmtDate, termsLabel, todayISO, useBase } from "../../lib/subscriptions";
 import StatusBadge from "../../components/StatusBadge";
+import InvoiceBadge from "../../components/InvoiceBadge";
 
 const ACTIONS = {
   draft: [
@@ -31,10 +32,13 @@ export default function SubscriptionDetail() {
   const [sub, setSub] = useState(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState("");
+  const [invoices, setInvoices] = useState([]);
+  const [billing, setBilling] = useState(false);
 
   const load = useCallback(async () => {
     try {
       setSub(await api(`/subscriptions/${id}`));
+      setInvoices(await api(`/invoices?subscription_id=${id}`));
     } catch (e) {
       setError(e.message);
     }
@@ -62,6 +66,18 @@ export default function SubscriptionDetail() {
       navigate(`${base}/subscriptions`);
     } catch (e) {
       setError(e.message);
+    }
+  }
+
+  async function generateInvoice() {
+    setError("");
+    setBilling(true);
+    try {
+      const inv = await api("/invoices/generate", { method: "POST", body: { subscription_id: Number(id) } });
+      navigate(`${base}/invoices/${inv.id}`);
+    } catch (e) {
+      setError(e.message);
+      setBilling(false);
     }
   }
 
@@ -216,6 +232,43 @@ export default function SubscriptionDetail() {
           </div>
         </div>
       </div>
+
+      {(sub.status === "active" || invoices.length > 0) && (
+        <div className="mt-6 rounded-xl border border-slate-200 bg-white shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+            <div>
+              <p className="font-semibold text-slate-900">Invoices</p>
+              {sub.status === "active" && (
+                <p className="text-xs text-slate-400">
+                  {sub.next_billing_date
+                    ? `Next billing period starts ${fmtDate(sub.next_billing_date)}`
+                    : "No more billing periods"}
+                </p>
+              )}
+            </div>
+            {sub.status === "active" && sub.next_billing_date && sub.next_billing_date <= todayISO() && (
+              <button className="btn-primary !w-auto" onClick={generateInvoice} disabled={billing}>
+                {billing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Receipt className="h-4 w-4" />}
+                Generate invoice
+              </button>
+            )}
+          </div>
+          {invoices.length > 0 && (
+            <table className="w-full border-t border-slate-100 text-left text-sm">
+              <tbody className="divide-y divide-slate-100">
+                {invoices.map((i) => (
+                  <tr key={i.id} onClick={() => navigate(`${base}/invoices/${i.id}`)} className="cursor-pointer hover:bg-slate-50">
+                    <td className="px-4 py-2.5 font-medium text-brand-700">{i.number}</td>
+                    <td className="px-4 py-2.5 text-slate-600">{fmtDate(i.period_start)} → {fmtDate(i.period_end)}</td>
+                    <td className="px-4 py-2.5 text-right">{money(i.total)}</td>
+                    <td className="px-4 py-2.5 text-right"><InvoiceBadge invoice={i} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
 
       {sub.notes && (
         <div className="mt-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">

@@ -5,7 +5,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.database import init_db
-from app.routers import auth, discounts, plans, products, quotations, taxes, subscriptions
+from app import scheduler
+from app.routers import (
+    auth, dashboard, discounts, invoices, payments, plans, portal, products, quotations,
+    subscriptions, taxes, users,
+)
 from app.seed import seed_admin
 
 
@@ -13,8 +17,10 @@ from app.seed import seed_admin
 async def lifespan(app: FastAPI):
     await init_db()
     await seed_admin()
+    scheduler.start()
     yield
-# fast API
+    scheduler.stop()
+
 
 app = FastAPI(title=settings.app_name, lifespan=lifespan)
 
@@ -32,7 +38,12 @@ app.include_router(plans.router)
 app.include_router(taxes.router)
 app.include_router(discounts.router)
 app.include_router(quotations.router)
+app.include_router(users.router)
 app.include_router(subscriptions.router)
+app.include_router(invoices.router)
+app.include_router(payments.router)
+app.include_router(dashboard.router)
+app.include_router(portal.router)
 
 
 @app.get("/health")

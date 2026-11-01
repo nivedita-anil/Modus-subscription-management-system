@@ -6,23 +6,21 @@ Built for a hackathon. FastAPI backend, React frontend.
 
 ## Status
 
-Work in progress. Features are built backend and frontend together, one at a time.
+Feature complete for the hackathon brief. The billing flow is covered by an automated test (`backend/tests`), and every page answers in well under 100 ms on 3,000 subscriptions and about 5,000 invoices.
 
 | Feature | State |
 | --- | --- |
-| Backend foundation (config, async database, health check) | Done |
-| Auth: register, login, JWT access and refresh tokens, role guards | Done |
-| Seeded admin account | Done |
-| Frontend scaffold, login and register pages | Done |
-| Admin layout with role-protected routes | Done |
-| Products and variants | Done |
-| Plans (price, billing period, availability, lifecycle options) | Done |
-| Tax rules and discounts | Next |
-| Quotation templates and subscriptions | Planned |
-| Invoices, payments, overdue handling | Planned |
-| Customer portal | Planned |
-| Finance dashboard | Planned |
-| Password reset | Planned |
+| Auth: register, login, JWT, role guards, password reset by email link | Done |
+| Roles: admin, staff, customer portal. Only an admin can add staff | Done |
+| Products and variants, plans, tax rules, discounts | Done |
+| Quotation templates | Done |
+| Subscriptions: Draft, Quotation, Confirmed, Active, Closed. Pause, renew, close early (per plan) | Done |
+| Invoices created from subscriptions, with tax and discounts. Confirm, cancel, send, print | Done |
+| No double billing: the database allows one live invoice per subscription and period | Done |
+| Payments recorded against invoices, paid and outstanding tracking, overdue list | Done |
+| Customer portal: own subscriptions and invoices, accept quotes, pause, renew | Done |
+| Finance dashboard with filters and summary | Done |
+| Daily automation: bills what is due, closes plans that end on their own | Done |
 
 ## Target scope
 
@@ -59,9 +57,13 @@ Work in progress. Features are built backend and frontend together, one at a tim
 │       ├── database.py      Engine, session, init_db
 │       ├── deps.py          Auth dependencies and role guards
 │       ├── seed.py          Creates the default admin on startup
-│       ├── models/          user, product, plan
-│       ├── schemas/         auth, product, plan
-│       └── routers/         auth, products, plans
+│       ├── seed_demo.py     Demo data (python -m app.seed_demo)
+│       ├── scheduler.py     Daily billing job
+│       ├── models/          user, product, plan, tax, discount, quotation, subscription, invoice, payment
+│       ├── schemas/         request and response shapes
+│       ├── services/        billing (invoice engine), pricing, subscription rules
+│       └── routers/         auth, catalog, subscriptions, invoices, payments, dashboard, portal
+│   └── tests/               end-to-end billing test
 └── frontend/
     └── src/
         ├── App.jsx          Routes
@@ -70,7 +72,9 @@ Work in progress. Features are built backend and frontend together, one at a tim
         ├── components/      AuthShell, RequireRole, layouts/AdminLayout
         └── pages/
             ├── auth/        Login, Register
-            └── admin/       Products, Plans
+            ├── admin/       Products, Plans, Discounts, Tax rules, Staff
+            ├── shared/      Dashboard, Subscriptions, Invoices, Payments (admin and staff)
+            └── portal/      Customer screens
 ```
 
 ## Getting started
@@ -162,3 +166,31 @@ See `/docs` for the full list with request and response shapes.
 
 - `brightloop.db`, `.env`, and `node_modules` must not be committed. Check `git status` before every push.
 - The Swagger page is a developer tool. The product interface is the React app.
+
+### Demo data
+
+An empty database shows empty screens. To fill it with products, plans, customers, about 3,000 subscriptions, invoices and payments (takes about 20 seconds):
+
+```bash
+cd backend
+python -m app.seed_demo            # or --subs 200 for a smaller set
+```
+
+Extra logins it creates (local use only):
+
+```
+staff@brightloop.com      Staff@12345
+customer@brightloop.com   Customer@12345
+```
+
+### Billing day
+
+Open **Invoices** and click **Generate due invoices**. Every active subscription whose next period has started gets a draft invoice with its lines, discounts and tax filled in. Clicking again creates nothing new. **Confirm all drafts** confirms them in one go. The same job also runs by itself every night.
+
+### Tests
+
+```bash
+cd backend
+pip install pytest pytest-asyncio
+python -m pytest -q
+```

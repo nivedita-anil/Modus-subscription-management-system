@@ -1,7 +1,9 @@
 from datetime import date, datetime
 from decimal import Decimal
 
-from sqlalchemy import Date, DateTime, ForeignKey, Integer, Numeric, String, Text, func
+from sqlalchemy import (
+    Boolean, Date, DateTime, ForeignKey, Integer, Numeric, String, Text, func,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -9,39 +11,42 @@ from app.models.discount import Discount
 from app.models.plan import Plan
 from app.models.product import Product, ProductVariant
 from app.models.tax import TaxRule
-from app.models.user import User
+
+# Draft -> Quotation -> Confirmed -> Active -> Closed
+STATUSES = ("draft", "quotation", "confirmed", "active", "closed")
+TERMS = ("Immediate", "Net 7", "Net 15", "Net 30", "Net 45", "Net 60")
 
 
 class Subscription(Base):
     __tablename__ = "subscriptions"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    # "SUB-000123", filled in right after the row gets its id
     number: Mapped[str | None] = mapped_column(String(20), unique=True, index=True, nullable=True)
-    # draft | quotation | confirmed | active | closed
-    status: Mapped[str] = mapped_column(String(12), default="draft", index=True)
     customer_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
     plan_id: Mapped[int] = mapped_column(ForeignKey("plans.id"), index=True)
     template_id: Mapped[int | None] = mapped_column(
         ForeignKey("quotation_templates.id"), nullable=True
     )
-    start_date: Mapped[date] = mapped_column(Date)
-    expiry_date: Mapped[date] = mapped_column(Date, index=True)
-    # set when the subscription goes active; billing moves it forward each cycle
-    next_billing_date: Mapped[date | None] = mapped_column(Date, nullable=True, index=True)
-    quote_valid_until: Mapped[date | None] = mapped_column(Date, nullable=True)
-    payment_terms: Mapped[str] = mapped_column(String(20), default="net_15")
-    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # a discount that applies to the whole subscription (line discounts live on the lines)
+    discount_id: Mapped[int | None] = mapped_column(ForeignKey("discounts.id"), nullable=True)
 
-    subtotal: Mapped[Decimal] = mapped_column(Numeric(12, 2), default=Decimal("0"))
-    discount_total: Mapped[Decimal] = mapped_column(Numeric(12, 2), default=Decimal("0"))
-    tax_total: Mapped[Decimal] = mapped_column(Numeric(12, 2), default=Decimal("0"))
-    total: Mapped[Decimal] = mapped_column(Numeric(12, 2), default=Decimal("0"))
+    status: Mapped[str] = mapped_column(String(12), default="draft", index=True)
+    is_paused: Mapped[bool] = mapped_column(Boolean, default=False)
+    start_date: Mapped[date] = mapped_column(Date)
+    expiry_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    payment_terms: Mapped[str] = mapped_column(String(20), default="Net 15")
+    quotation_valid_until: Mapped[date | None] = mapped_column(Date, nullable=True)
+    # the start of the next period that still has to be invoiced; None = nothing left to bill
+    next_billing_date: Mapped[date | None] = mapped_column(Date, nullable=True, index=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     created_by_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    closed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
-    customer: Mapped[User] = relationship(foreign_keys=[customer_id], lazy="selectin")
     plan: Mapped[Plan] = relationship(lazy="selectin")
+    discount: Mapped[Discount | None] = relationship(lazy="selectin")
     lines: Mapped[list["SubscriptionLine"]] = relationship(
         back_populates="subscription",
         cascade="all, delete-orphan",
@@ -65,12 +70,6 @@ class SubscriptionLine(Base):
     unit_price: Mapped[Decimal] = mapped_column(Numeric(12, 2))
     tax_id: Mapped[int | None] = mapped_column(ForeignKey("tax_rules.id"), nullable=True)
     discount_id: Mapped[int | None] = mapped_column(ForeignKey("discounts.id"), nullable=True)
-
-    # amounts worked out when the line is saved (invoices will copy these)
-    subtotal: Mapped[Decimal] = mapped_column(Numeric(12, 2), default=Decimal("0"))  # qty x unit price
-    discount_amount: Mapped[Decimal] = mapped_column(Numeric(12, 2), default=Decimal("0"))
-    tax_amount: Mapped[Decimal] = mapped_column(Numeric(12, 2), default=Decimal("0"))
-    total: Mapped[Decimal] = mapped_column(Numeric(12, 2), default=Decimal("0"))
 
     subscription: Mapped[Subscription] = relationship(back_populates="lines")
     product: Mapped[Product] = relationship(lazy="selectin")
