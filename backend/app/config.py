@@ -25,10 +25,6 @@ class Settings(BaseSettings):
     # Frontend
     frontend_url: str = "http://localhost:5173"
 
-    # Unified LLM API (OpenAI-compatible)
-    llm_api_key: str = ""
-    llm_base_url: str = ""
-    llm_model: str = "auto"
 
     # Email
     resend_api_key: str = ""
