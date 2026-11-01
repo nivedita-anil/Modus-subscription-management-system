@@ -4,12 +4,17 @@ A subscription billing system for businesses that sell on a recurring basis. It 
 
 The project follows the case study of a fictional company, Brightloop Software, which sells software by the month and year. That is why the interface carries the Brightloop name.
 
-[![Watch the demo video](https://img.youtube.com/vi/wcX5F_SwDJQ/hqdefault.jpg)](https://youtu.be/wcX5F_SwDJQ)
+## Demo
 
-Demo video: https://youtu.be/wcX5F_SwDJQ
+A walkthrough of all four flows in about 2 minutes 45 seconds: admin, staff, existing customer, and new customer sign-up. Each step is captioned.
+
+https://github.com/user-attachments/assets/132a94df-64c7-4984-986d-6130bc9ad4ed
+
+Also on YouTube: https://youtu.be/ttPO3PHyzKI
 
 ## Contents
 
+- [Demo](#demo)
 - [The problem](#the-problem)
 - [What it does](#what-it-does)
 - [Screenshots](#screenshots)
