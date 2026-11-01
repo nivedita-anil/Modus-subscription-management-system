@@ -84,7 +84,7 @@ export default function Discounts() {
     <div className="mx-auto max-w-6xl">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Discounts</h1>
+          <h1 className="page-title">Discounts<span className="heading-period">.</span></h1>
           <p className="mt-1 text-sm text-slate-500">
             Percentage or fixed-amount discounts, with conditions, dates and usage limits.
           </p>

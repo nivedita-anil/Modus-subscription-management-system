@@ -1,86 +1,112 @@
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard, Package, Layers, Percent, Receipt, Users, LogOut, Repeat, FileText,
-  RefreshCw, FileSpreadsheet, Wallet,
+  LayoutDashboard, Package, Layers, Percent, Receipt, Users, LogOut, FileText,
+  RefreshCw, FileSpreadsheet, Wallet, Menu,
 } from "lucide-react";
+import { api } from "../../api/client";
 import { getUser, logout } from "../../lib/auth";
+import { Wordmark } from "../Brand";
 
 // One layout for admin and staff. `adminOnly` items are hidden from staff.
-const items = (base) => [
-  { to: `${base}/dashboard`, label: "Dashboard", icon: LayoutDashboard },
-  { to: `${base}/subscriptions`, label: "Subscriptions", icon: RefreshCw },
-  { to: `${base}/invoices`, label: "Invoices", icon: FileSpreadsheet },
-  { to: `${base}/payments`, label: "Payments", icon: Wallet },
-  { to: `${base}/quotation-templates`, label: "Quotation templates", icon: FileText },
-  { to: `${base}/products`, label: "Products", icon: Package, adminOnly: true },
-  { to: `${base}/plans`, label: "Plans", icon: Layers, adminOnly: true },
-  { to: `${base}/discounts`, label: "Discounts", icon: Percent, adminOnly: true },
-  { to: `${base}/taxes`, label: "Tax rules", icon: Receipt, adminOnly: true },
-  { to: `${base}/staff-users`, label: "Staff", icon: Users, adminOnly: true },
+const groups = (base) => [
+  {
+    label: "Workspace",
+    items: [
+      { to: `${base}/dashboard`, label: "Dashboard", icon: LayoutDashboard },
+      { to: `${base}/subscriptions`, label: "Subscriptions", icon: RefreshCw },
+      { to: `${base}/invoices`, label: "Invoices", icon: FileSpreadsheet, badge: true },
+      { to: `${base}/payments`, label: "Payments", icon: Wallet },
+    ],
+  },
+  {
+    label: "Catalog",
+    items: [
+      { to: `${base}/quotation-templates`, label: "Quotation templates", icon: FileText },
+      { to: `${base}/products`, label: "Products", icon: Package, adminOnly: true },
+      { to: `${base}/plans`, label: "Plans", icon: Layers, adminOnly: true },
+      { to: `${base}/discounts`, label: "Discounts", icon: Percent, adminOnly: true },
+      { to: `${base}/taxes`, label: "Tax rules", icon: Receipt, adminOnly: true },
+    ],
+  },
+  { label: "Team", adminOnly: true, items: [{ to: `${base}/staff-users`, label: "Staff", icon: Users }] },
 ];
+
+const initials = (name = "") => name.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase() || "?";
 
 export default function AdminLayout() {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const user = getUser();
   const isAdmin = user?.role === "admin";
-  const nav = items(isAdmin ? "/admin" : "/staff").filter((i) => isAdmin || !i.adminOnly);
+  const base = isAdmin ? "/admin" : "/staff";
+  const [open, setOpen] = useState(false);
+  const [overdue, setOverdue] = useState(0);
+
+  // the pink badge on Invoices: how many are overdue right now
+  useEffect(() => {
+    api("/invoices?overdue=true&page_size=1").then((d) => setOverdue(d.total)).catch(() => {});
+  }, [pathname]);
+  useEffect(() => setOpen(false), [pathname]);
 
   function signOut() {
     logout();
     navigate("/login");
   }
 
-  const link = ({ isActive }) =>
-    `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
-      isActive ? "bg-brand-600 text-white" : "hover:bg-slate-800 hover:text-white"
-    }`;
-
   return (
-    <div className="flex min-h-screen">
-      <aside className="no-print hidden w-64 shrink-0 flex-col bg-slate-900 text-slate-300 md:flex">
-        <div className="flex items-center gap-2.5 px-6 py-6">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-600 text-white">
-            <Repeat className="h-4 w-4" />
-          </div>
-          <span className="text-lg font-bold text-white">Brightloop</span>
+    <div className="min-h-screen">
+      <aside className={`app-sidebar no-print ${open ? "open" : ""}`}>
+        <div className="px-2.5">
+          <Wordmark />
         </div>
 
-        <nav className="flex-1 space-y-1 overflow-y-auto px-3">
-          {nav.map(({ to, label, icon: Icon }) => (
-            <NavLink key={to} to={to} className={link}>
-              <Icon className="h-4 w-4" />
-              {label}
-            </NavLink>
-          ))}
+        <nav className="mt-9 flex-1 space-y-6 overflow-y-auto">
+          {groups(base)
+            .filter((g) => isAdmin || !g.adminOnly)
+            .map((g) => {
+              const items = g.items.filter((i) => isAdmin || !i.adminOnly);
+              if (!items.length) return null;
+              return (
+                <div key={g.label}>
+                  <span className="sb-label">{g.label}</span>
+                  {items.map(({ to, label, icon: Icon, badge }) => (
+                    <NavLink key={to} to={to} className={({ isActive }) => `sb-link ${isActive ? "active" : ""}`}>
+                      <Icon className="h-4 w-4" />
+                      {label}
+                      {badge && overdue > 0 && <em title={`${overdue} overdue`}>{overdue > 99 ? "99+" : overdue}</em>}
+                    </NavLink>
+                  ))}
+                </div>
+              );
+            })}
         </nav>
 
-        <div className="border-t border-slate-800 p-4">
-          <p className="truncate text-sm font-medium text-white">{user?.full_name}</p>
-          <p className="truncate text-xs capitalize text-slate-400">{user?.role} · {user?.email}</p>
-          <button onClick={signOut} className="mt-3 flex items-center gap-2 text-sm text-slate-400 hover:text-white">
-            <LogOut className="h-4 w-4" /> Sign out
+        <div className="flex items-center gap-2.5 border-t pt-4" style={{ borderColor: "var(--line)" }}>
+          <span className="grid h-8 w-8 flex-none place-items-center rounded-lg font-display text-xs font-bold"
+            style={{ background: "linear-gradient(135deg,#8f406d,#51203d)", color: "#f7d8e9" }}>
+            {initials(user?.full_name)}
+          </span>
+          <span className="min-w-0 flex-1">
+            <strong className="block truncate text-xs text-slate-800">{user?.full_name}</strong>
+            <small className="block text-[11px] capitalize text-slate-400">{user?.role}</small>
+          </span>
+          <button onClick={signOut} title="Sign out" aria-label="Sign out"
+            className="rounded-md p-1.5 text-slate-400 hover:bg-white/5 hover:text-slate-800">
+            <LogOut className="h-4 w-4" />
           </button>
         </div>
       </aside>
+      <div className={`sb-overlay ${open ? "open" : ""}`} onClick={() => setOpen(false)} />
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="no-print border-b border-slate-200 bg-white md:hidden">
-          <div className="flex items-center justify-between px-4 py-3">
-            <span className="font-bold">Brightloop</span>
-            <button onClick={signOut} className="text-sm text-slate-500">Sign out</button>
-          </div>
-          <nav className="flex gap-1 overflow-x-auto px-3 pb-2">
-            {nav.map(({ to, label }) => (
-              <NavLink key={to} to={to}
-                className={({ isActive }) =>
-                  `whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium ${
-                    isActive ? "bg-brand-600 text-white" : "bg-slate-100 text-slate-600"}`}>
-                {label}
-              </NavLink>
-            ))}
-          </nav>
+      <div className="app-main flex min-w-0 flex-col">
+        <header className="no-print flex h-14 items-center justify-between border-b px-4 md:hidden" style={{ borderColor: "var(--line)" }}>
+          <Wordmark />
+          <button onClick={() => setOpen(true)} aria-label="Open menu" className="rounded-md p-2 text-slate-500 hover:text-slate-800">
+            <Menu className="h-5 w-5" />
+          </button>
         </header>
-        <main className="flex-1 p-4 sm:p-6 lg:p-10">
+        <main className="flex-1 px-4 py-8 sm:px-8 lg:px-12 lg:py-12">
           <Outlet />
         </main>
       </div>

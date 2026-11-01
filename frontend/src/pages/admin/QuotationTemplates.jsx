@@ -100,7 +100,7 @@ export default function QuotationTemplates() {
     <div className="mx-auto max-w-6xl">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Quotation templates</h1>
+          <h1 className="page-title">Quotation templates<span className="heading-period">.</span></h1>
           <p className="mt-1 text-sm text-slate-500">
             Ready-made quotes: a plan plus the products, taxes and discounts that usually go with it.
           </p>

@@ -67,7 +67,7 @@ export default function Products() {
     <div className="mx-auto max-w-6xl">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Products</h1>
+          <h1 className="page-title">Products<span className="heading-period">.</span></h1>
           <p className="mt-1 text-sm text-slate-500">
             What Brightloop sells, with prices and variants.
           </p>

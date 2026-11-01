@@ -51,7 +51,7 @@ export default function Taxes() {
     <div className="mx-auto max-w-5xl">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Tax rules</h1>
+          <h1 className="page-title">Tax rules<span className="heading-period">.</span></h1>
           <p className="mt-1 text-sm text-slate-500">
             Tax rates that get applied to invoices, such as GST slabs.
           </p>

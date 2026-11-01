@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { RefreshCw, TrendingUp, Wallet, Clock, AlertTriangle, FileSpreadsheet, Loader2 } from "lucide-react";
 import { api } from "../../api/client";
 import { money, dateText, todayISO } from "../../lib/format";
+import { getUser } from "../../lib/auth";
 import { useBase } from "../../hooks/useBase";
 import { Card, ErrorBox, PageHeader, StatusBadge, tableWrap, thead } from "../../components/ui";
 
@@ -16,8 +17,15 @@ function preset(name) {
 }
 const PRESETS = [["month", "This month"], ["30", "Last 30 days"], ["year", "This year"], ["all", "All time"]];
 
+const greeting = () => {
+  const h = new Date().getHours();
+  return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
+};
+
 export default function Dashboard() {
   const base = useBase();
+  const firstName = (getUser()?.full_name || "there").split(" ")[0];
+  const today = new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" });
   const [range, setRange] = useState({ ...preset("month"), name: "month" });
   const [planId, setPlanId] = useState("");
   const [plans, setPlans] = useState([]);
@@ -57,8 +65,8 @@ export default function Dashboard() {
 
   return (
     <div className="mx-auto max-w-6xl">
-      <PageHeader title="Dashboard" subtitle="Subscriptions, revenue, payments and overdue invoices in one place.">
-        <select className="input !w-auto" value={planId} onChange={(e) => setPlanId(e.target.value)}>
+      <PageHeader title={`${greeting()}, ${firstName}`} eyebrow={today} subtitle="Here's where subscriptions, revenue and payments stand.">
+        <select className="input !w-auto" aria-label="Filter by plan" value={planId} onChange={(e) => setPlanId(e.target.value)}>
           <option value="">All plans</option>
           {plans.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
@@ -68,7 +76,7 @@ export default function Dashboard() {
         {PRESETS.map(([k, label]) => (
           <button key={k} onClick={() => pick(k)}
             className={`rounded-full px-3.5 py-1.5 text-sm font-medium ${
-              range.name === k ? "bg-brand-600 text-white" : "border border-slate-300 bg-white text-slate-600 hover:bg-slate-50"}`}>
+              range.name === k ? "bg-[var(--accent-soft)] text-[color:var(--primary)] ring-1 ring-[rgba(220,69,154,.4)]" : "border border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-800"}`}>
             {label}
           </button>
         ))}
@@ -84,18 +92,18 @@ export default function Dashboard() {
       {data && (
         <>
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <Stat icon={RefreshCw} label="Active subscriptions" value={data.subscriptions.active}
+            <Stat icon={RefreshCw} label="Active subscriptions" tone2="lavender" value={data.subscriptions.active}
               hint={`${data.subscriptions.paused} paused · ${data.subscriptions.total} in total`}
               to={`${base}/subscriptions?status=active`} />
-            <Stat icon={TrendingUp} label="Monthly recurring revenue" value={money(data.mrr)}
+            <Stat icon={TrendingUp} label="Monthly recurring revenue" tone2="rose" value={money(data.mrr)}
               hint="Active subscriptions, before discounts and tax" />
-            <Stat icon={Wallet} label="Revenue collected" value={money(data.revenue_collected)} tone="good"
+            <Stat icon={Wallet} label="Revenue collected" tone2="green" value={money(data.revenue_collected)} tone="good"
               hint={`${data.payments_count} payments in this period`} to={`${base}/payments`} />
-            <Stat icon={FileSpreadsheet} label="Invoiced" value={money(data.invoiced)}
+            <Stat icon={FileSpreadsheet} label="Invoiced" tone2="lavender" value={money(data.invoiced)}
               hint={`${data.invoices_count} invoices in this period`} to={`${base}/invoices`} />
-            <Stat icon={Clock} label="Still owed (outstanding)" value={money(data.outstanding)}
+            <Stat icon={Clock} label="Still owed (outstanding)" tone2="orange" value={money(data.outstanding)}
               hint={`${data.outstanding_count} confirmed invoices unpaid`} to={`${base}/invoices?status=confirmed`} />
-            <Stat icon={AlertTriangle} label="Overdue" value={money(data.overdue)} tone="bad"
+            <Stat icon={AlertTriangle} label="Overdue" tone2="rose" value={money(data.overdue)} tone="bad"
               hint={`${data.overdue_count} invoices past their due date`} to={`${base}/invoices?overdue=1`} />
           </div>
 
@@ -105,9 +113,9 @@ export default function Dashboard() {
                 {data.months.map((m) => (
                   <div key={m.month} className="flex flex-1 flex-col items-center gap-1">
                     <div className="flex h-36 w-full items-end justify-center gap-1">
-                      <div className="w-1/2 max-w-[22px] rounded-t bg-brand-100" title={`Invoiced ${money(m.invoiced)}`}
+                      <div className="w-1/2 max-w-[22px] rounded-t bg-[rgba(183,169,232,.35)]" title={`Invoiced ${money(m.invoiced)}`}
                         style={{ height: `${(Number(m.invoiced) / maxMonth) * 100}%` }} />
-                      <div className="w-1/2 max-w-[22px] rounded-t bg-brand-600" title={`Collected ${money(m.collected)}`}
+                      <div className="w-1/2 max-w-[22px] rounded-t bg-[var(--accent)]" title={`Collected ${money(m.collected)}`}
                         style={{ height: `${(Number(m.collected) / maxMonth) * 100}%` }} />
                     </div>
                     <span className="text-[11px] text-slate-500">{m.month.split(" ")[0]}</span>
@@ -115,8 +123,8 @@ export default function Dashboard() {
                 ))}
               </div>
               <div className="mt-3 flex gap-4 text-xs text-slate-500">
-                <span className="flex items-center gap-1.5"><i className="h-2.5 w-2.5 rounded bg-brand-100" /> Invoiced</span>
-                <span className="flex items-center gap-1.5"><i className="h-2.5 w-2.5 rounded bg-brand-600" /> Collected</span>
+                <span className="flex items-center gap-1.5"><i className="h-2.5 w-2.5 rounded bg-[rgba(183,169,232,.35)]" /> Invoiced</span>
+                <span className="flex items-center gap-1.5"><i className="h-2.5 w-2.5 rounded bg-[var(--accent)]" /> Collected</span>
               </div>
             </Card>
 
@@ -128,7 +136,7 @@ export default function Dashboard() {
                       <span className="capitalize text-slate-600">{s}</span><span className="font-medium">{n}</span>
                     </div>
                     <div className="mt-1 h-1.5 rounded bg-slate-100">
-                      <div className="h-1.5 rounded bg-brand-500" style={{ width: `${(n / statusTotal) * 100}%` }} />
+                      <div className="h-1.5 rounded bg-[var(--accent)]" style={{ width: `${(n / statusTotal) * 100}%` }} />
                     </div>
                   </Link>
                 ))}
@@ -144,8 +152,8 @@ export default function Dashboard() {
             </Card>
           </div>
 
-          <div className="mt-6 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-slate-900">Overdue invoices</h2>
+          <div className="mt-10 flex items-end justify-between">
+            <div><p className="eyebrow"><span className="eyebrow-dot" /> Needs chasing</p><h2 className="text-xl font-semibold text-slate-900">Overdue invoices</h2></div>
             <Link to={`${base}/invoices?overdue=1`} className="text-sm font-medium text-brand-600">See all</Link>
           </div>
           <div className={tableWrap}>
@@ -178,15 +186,14 @@ export default function Dashboard() {
   );
 }
 
-function Stat({ icon: Icon, label, value, hint, to, tone }) {
-  const color = tone === "bad" ? "text-red-600" : tone === "good" ? "text-emerald-600" : "text-slate-900";
+function Stat({ icon: Icon, label, value, hint, to, tone, tone2 = "rose" }) {
+  const color = tone === "bad" ? "var(--coral)" : "var(--text)";
   const body = (
-    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-brand-500/40">
-      <div className="flex items-center justify-between text-sm text-slate-500">
-        {label}<Icon className="h-4 w-4 text-slate-400" />
-      </div>
-      <p className={`mt-2 text-2xl font-bold ${color}`}>{value}</p>
-      <p className="mt-1 text-xs text-slate-400">{hint}</p>
+    <div className="panel h-full p-[18px] transition hover:border-[rgba(215,162,192,.28)]">
+      <span className={`metric-icon tone-${tone2}`}><Icon className="h-4 w-4" /></span>
+      <p className="mt-4 text-xs text-slate-500">{label}</p>
+      <p className="mt-1 font-display text-[26px] font-semibold" style={{ letterSpacing: "-0.06em", color }}>{value}</p>
+      <p className="mt-1.5 text-xs text-slate-400">{hint}</p>
     </div>
   );
   return to ? <Link to={to}>{body}</Link> : body;

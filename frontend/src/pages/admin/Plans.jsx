@@ -79,7 +79,7 @@ export default function Plans() {
     <div className="mx-auto max-w-6xl">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Plans</h1>
+          <h1 className="page-title">Plans<span className="heading-period">.</span></h1>
           <p className="mt-1 text-sm text-slate-500">
             What a subscription costs, how often it bills, and what customers can do with it.
           </p>
